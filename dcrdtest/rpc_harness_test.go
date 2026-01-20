@@ -15,13 +15,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
+	"github.com/decred/slog"
 	"github.com/monetarium/monetarium-node/chaincfg"
+	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/cointype"
 	"github.com/monetarium/monetarium-node/dcrutil"
 	dcrdtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
 	"github.com/monetarium/monetarium-node/wire"
-	"github.com/decred/slog"
 	"matheusd.com/testctx"
 )
 
@@ -500,7 +500,8 @@ func testMemWalletReorg(ctx context.Context, r *Harness, t *testing.T) {
 	defer harness.TearDown()
 
 	// Ensure the internal wallet has the expected balance.
-	expectedBalance := dcrutil.Amount(5 * 300 * cointype.AtomsPerVAR)
+	// RegNet: BaseSubsidy=500 VAR, with SSVMonetarium (50% work reward) = 250 VAR per block
+	expectedBalance := dcrutil.Amount(5 * 250 * cointype.AtomsPerVAR)
 	walletBalance := harness.ConfirmedBalance()
 	if expectedBalance != walletBalance {
 		t.Fatalf("wallet balance incorrect: expected %v, got %v",
@@ -587,7 +588,8 @@ func TestHarness(t *testing.T) {
 	defer mainHarness.TearDownInTest(t)
 
 	// We should have the expected amount of mature unspent outputs.
-	expectedBalance := dcrutil.Amount(numMatureOutputs * 300 * cointype.AtomsPerVAR)
+	// RegNet: BaseSubsidy=500 VAR, with SSVMonetarium (50% work reward) = 250 VAR per block
+	expectedBalance := dcrutil.Amount(numMatureOutputs * 250 * cointype.AtomsPerVAR)
 	harnessBalance := mainHarness.ConfirmedBalance()
 	if harnessBalance != expectedBalance {
 		t.Fatalf("expected wallet balance of %v instead have %v",

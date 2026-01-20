@@ -30,7 +30,7 @@ echo "GOWORK: $GOWORK"
 
 # Root module name to determine which submodules to test. This is needed because
 # the top-level dir is not a Go module.
-ROOTMOD="github.com/decred/dcrtest"
+ROOTMOD="github.com/monetarium/monetarium-test"
 
 # Run tests on all modules.
 ROOTPATHPATTERN=$(echo $ROOTMOD | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')

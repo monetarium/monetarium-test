@@ -13,8 +13,8 @@ import (
 
 	"github.com/monetarium/monetarium-node/blockchain/stake"
 	"github.com/monetarium/monetarium-node/blockchain/standalone"
-	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/chaincfg"
+	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/cointype"
 	"github.com/monetarium/monetarium-node/dcrec"
 	"github.com/monetarium/monetarium-node/dcrec/secp256k1"
@@ -96,6 +96,7 @@ type VotingWallet struct {
 	hn         *Harness
 	privateKey []byte
 	address    stdaddr.Address
+	hash160    []byte // For SSFee consolidation address output
 	c          *rpcclient.Client
 
 	blockConnectedNtfnChan chan blockConnectedNtfn
@@ -181,6 +182,7 @@ func NewVotingWallet(ctx context.Context, hn *Harness) (*VotingWallet, error) {
 		hn:                     hn,
 		privateKey:             hardcodedPrivateKey,
 		address:                addr,
+		hash160:                h160[:],
 		p2sstxVer:              p2sstxVer,
 		p2sstx:                 p2sstx,
 		p2pkhVer:               p2pkhVer,
@@ -504,9 +506,8 @@ func (w *VotingWallet) handleWinningTicketsNtfn(ctx context.Context, ntfn *winni
 		return
 	}
 
-	// Always consider the subsidy split enabled since the test voting wallet
-	// is only used with simnet where the agenda is always active.
-	const subsidySplitVariant = standalone.SSVDCP0012
+	// Use Monetarium subsidy split (50% PoW, 50% PoS, 0% Treasury).
+	const subsidySplitVariant = standalone.SSVMonetarium
 	stakebaseValue := w.subsidyCache.CalcStakeVoteSubsidyV3(ntfn.blockHeight,
 		subsidySplitVariant)
 
@@ -541,6 +542,14 @@ func (w *VotingWallet) handleWinningTicketsNtfn(ctx context.Context, ntfn *winni
 		vote.AddTxOut(wire.NewTxOut(0, blockRefScript))
 		vote.AddTxOut(newTxOut(0, w.voteScriptVer, w.voteScript))
 		vote.AddTxOut(newTxOut(voteRetValue, w.voteRetScriptVer, w.voteRetScript))
+
+		// Add SSFee consolidation address output (required for Monetarium votes)
+		consolidationOutput, err := stake.CreateSSFeeConsolidationOutput(w.hash160)
+		if err != nil {
+			w.logError(fmt.Errorf("failed to create consolidation output: %v", err))
+			return
+		}
+		vote.AddTxOut(consolidationOutput)
 
 		// If there are tspends to vote for, create an additional
 		// output.

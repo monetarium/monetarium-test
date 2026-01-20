@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/chaincfg"
+	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/dcrutil"
 	"github.com/monetarium/monetarium-node/rpcclient"
 	"github.com/monetarium/monetarium-node/txscript/stdaddr"

@@ -1,14 +1,18 @@
-version: "2"
 run:
-  timeout: 10m
+  deadline: 10m
+  build-tags:
+    - rpctest
+
 linters:
-  default: none
+  disable-all: true
   enable:
     - asciicheck
     - bidichk
     - bodyclose
     - durationcheck
     - errchkjson
+    - gofmt
+    - goimports
     - govet
     - grouper
     - ineffassign
@@ -20,7 +24,3 @@ linters:
     - tparallel
     - unconvert
     - unused
-formatters:
-  enable:
-    - gofmt
-    - goimports

@@ -13,8 +13,8 @@ import (
 	"sync"
 
 	"github.com/monetarium/monetarium-node/blockchain/standalone"
-	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/chaincfg"
+	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/cointype"
 	"github.com/monetarium/monetarium-node/dcrec"
 	"github.com/monetarium/monetarium-node/dcrec/secp256k1"
@@ -449,6 +449,11 @@ func (m *memWallet) fundTx(ctx context.Context, tx *wire.MsgTx, amt dcrutil.Amou
 		// Skip any outputs that are still currently immature or are
 		// currently locked.
 		if !utxo.isMature(m.currentHeight) || utxo.isLocked {
+			continue
+		}
+
+		// Skip zero-value UTXOs (e.g., premine coinbase has no work subsidy output)
+		if utxo.value == 0 {
 			continue
 		}
 
