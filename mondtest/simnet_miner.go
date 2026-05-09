@@ -2,7 +2,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 
 	"github.com/monetarium/monetarium-node/blockchain/standalone"
 	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
-	dcrdtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
+	mondtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
 	"github.com/monetarium/monetarium-node/rpcclient"
 	"github.com/monetarium/monetarium-node/wire"
 )
@@ -113,7 +113,7 @@ func waitPredicate(pred func() bool, timeout time.Duration) error {
 func AdjustedSimnetMiner(ctx context.Context, client *rpcclient.Client, nb uint32) ([]*chainhash.Hash, error) {
 	// Fetch the current template. This might fail if there aren't enough
 	// tickets in the mempool yet, so perform a few tries.
-	var prevWork *dcrdtypes.GetWorkResult
+	var prevWork *mondtypes.GetWorkResult
 	err := waitPredicate(func() bool {
 		var err error
 		prevWork, err = client.GetWork(ctx)

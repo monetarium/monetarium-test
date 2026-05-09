@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ import (
 	"github.com/monetarium/monetarium-node/chaincfg/chainhash"
 	"github.com/monetarium/monetarium-node/cointype"
 	"github.com/monetarium/monetarium-node/dcrutil"
-	dcrdtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
+	mondtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
 	"github.com/monetarium/monetarium-node/wire"
 	"matheusd.com/testctx"
 )
@@ -304,7 +304,7 @@ func testJoinMempools(ctx context.Context, r *Harness, t *testing.T) {
 	defer log.Tracef("testJoinMempools end")
 
 	// Assert main test harness has no transactions in its mempool.
-	pooledHashes, err := r.Node.GetRawMempool(ctx, dcrdtypes.GRMAll)
+	pooledHashes, err := r.Node.GetRawMempool(ctx, mondtypes.GRMAll)
 	if err != nil {
 		t.Fatalf("unable to get mempool for main test harness: %v", err)
 	}
@@ -356,7 +356,7 @@ func testJoinMempools(ctx context.Context, r *Harness, t *testing.T) {
 	harnessSynced := make(chan error)
 	go func() {
 		for {
-			poolHashes, err := r.Node.GetRawMempool(ctx, dcrdtypes.GRMAll)
+			poolHashes, err := r.Node.GetRawMempool(ctx, mondtypes.GRMAll)
 			if err != nil {
 				err = fmt.Errorf("failed to retrieve harness mempool: %w", err)
 				harnessSynced <- err
@@ -759,10 +759,10 @@ func TestSetupWithError(t *testing.T) {
 	}
 }
 
-// TestSetupWithWrongDcrd tests that when the setup of an rpc harness fails due
-// to an inexistent dcrd binary, it cleanly tears down the harness without user
+// TestSetupWithWrongMond tests that when the setup of an rpc harness fails due
+// to an inexistent mond binary, it cleanly tears down the harness without user
 // intervention.
-func TestSetupWithWrongDcrd(t *testing.T) {
+func TestSetupWithWrongMond(t *testing.T) {
 	// Keep track of how many goroutines are running before the test
 	// happens.
 	beforeCount := pprof.Lookup("goroutine").Count()
@@ -774,8 +774,8 @@ func TestSetupWithWrongDcrd(t *testing.T) {
 	log.SetLevel(slog.LevelDebug)
 	defer UseLogger(slog.Disabled)
 
-	SetPathToDCRD("/path/to/dcrd/that/does/not/exist")
-	defer SetPathToDCRD("")
+	SetPathToMOND("/path/to/mond/that/does/not/exist")
+	defer SetPathToMOND("")
 
 	params := chaincfg.RegNetParams()
 	mainHarness, err := New(t, params, nil, nil)
@@ -785,8 +785,8 @@ func TestSetupWithWrongDcrd(t *testing.T) {
 
 	// Perform the setup. This should fail.
 	ctx := testctx.WithTimeout(t, time.Second*30)
-	if err := mainHarness.SetUp(ctx, true, 2); !errors.Is(err, errDcrdCmdExec) {
-		t.Fatalf("Unexpected error in Setup(): got %v, want %v", err, errDcrdCmdExec)
+	if err := mainHarness.SetUp(ctx, true, 2); !errors.Is(err, errMondCmdExec) {
+		t.Fatalf("Unexpected error in Setup(): got %v, want %v", err, errMondCmdExec)
 	}
 
 	// There should not be any new goroutines running.

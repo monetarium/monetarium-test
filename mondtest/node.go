@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"bufio"
@@ -24,10 +24,10 @@ import (
 	rpc "github.com/monetarium/monetarium-node/rpcclient"
 )
 
-// errDcrdCmdExec is the error returned when the dcrd binary is not executed.
-var errDcrdCmdExec = errors.New("unable to exec dcrd binary")
+// errMondCmdExec is the error returned when the MOND binary is not executed.
+var errMondCmdExec = errors.New("unable to exec mond binary")
 
-// nodeConfig contains all the args, and data required to launch a dcrd process
+// nodeConfig contains all the args, and data required to launch a mond process
 // and connect the rpc client to it.
 type nodeConfig struct {
 	rpcUser    string
@@ -42,18 +42,18 @@ type nodeConfig struct {
 	extra      []string
 	prefix     string
 
-	pathToDCRD   string
+	pathToMOND   string
 	endpoint     string
 	certFile     string
 	keyFile      string
 	certificates []byte
 
 	// pipeTX are the read/write ends of a pipe that is used with the
-	// --pipetx dcrd arg.
+	// --pipetx mond arg.
 	pipeTX ipcPipePair
 
 	// pipeRX are the read/write ends of a pipe that is used with the
-	// --piperx dcrd arg.
+	// --piperx mond arg.
 	pipeRX ipcPipePair
 }
 
@@ -61,11 +61,11 @@ type nodeConfig struct {
 func newConfig(prefix, certFile, keyFile string, extra []string) (*nodeConfig, error) {
 	pipeTX, err := newIPCPipePair(true, false)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create pipe for dcrd IPC: %v", err)
+		return nil, fmt.Errorf("unable to create pipe for MOND IPC: %v", err)
 	}
 	pipeRX, err := newIPCPipePair(false, true)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create pipe for dcrd IPC: %v", err)
+		return nil, fmt.Errorf("unable to create pipe for MOND IPC: %v", err)
 	}
 
 	a := &nodeConfig{
@@ -103,7 +103,7 @@ func (n *nodeConfig) setDefaults() error {
 	return nil
 }
 
-// arguments returns an array of arguments that be used to launch the dcrd
+// arguments returns an array of arguments that be used to launch the mond
 // process.
 func (n *nodeConfig) arguments() []string {
 	args := []string{}
@@ -164,9 +164,9 @@ func (n *nodeConfig) arguments() []string {
 	return args
 }
 
-// command returns the exec.Cmd which will be used to start the dcrd process.
+// command returns the exec.Cmd which will be used to start the mond process.
 func (n *nodeConfig) command() *exec.Cmd {
-	cmd := exec.Command(n.pathToDCRD, n.arguments()...)
+	cmd := exec.Command(n.pathToMOND, n.arguments()...)
 	setOSNodeCmdOptions(n, cmd)
 	return cmd
 }
@@ -177,7 +177,7 @@ func (n *nodeConfig) String() string {
 }
 
 // node houses the necessary state required to configure, launch, and manage a
-// dcrd process.
+// mond process.
 type node struct {
 	config *nodeConfig
 
@@ -206,7 +206,7 @@ func (n *node) logf(format string, args ...interface{}) {
 
 // newNode creates a new node instance according to the passed config. dataDir
 // will be used to hold a file recording the pid of the launched process, and
-// as the base for the log and data directories for dcrd.
+// as the base for the log and data directories for mond.
 func newNode(config *nodeConfig, dataDir string) (*node, error) {
 	return &node{
 		config:     config,
@@ -216,7 +216,7 @@ func newNode(config *nodeConfig, dataDir string) (*node, error) {
 	}, nil
 }
 
-// start creates a new dcrd process, and writes its pid in a file reserved for
+// start creates a new mond process, and writes its pid in a file reserved for
 // recording the pid of the launched process. This file can be used to
 // terminate the process in case of a hang, or panic. In the case of a failing
 // test case, or panic, it is important that the process be stopped via stop(),
@@ -315,7 +315,7 @@ func (n *node) start(ctx context.Context) error {
 		n.wg.Wait()
 		n.config.pipeTX.close()
 		n.config.pipeRX.close()
-		return fmt.Errorf("%w: %v", errDcrdCmdExec, err)
+		return fmt.Errorf("%w: %v", errMondCmdExec, err)
 	}
 	n.cmd = cmd
 	close(n.cmdStarted)
@@ -324,7 +324,7 @@ func (n *node) start(ctx context.Context) error {
 	// Unblock pipes now that pid is available.
 	pid.Done()
 
-	f, err := os.Create(filepath.Join(n.config.String(), "dcrd.pid"))
+	f, err := os.Create(filepath.Join(n.config.String(), "mond.pid"))
 	if err != nil {
 		_ = n.stop() // Cleanup what has been done so far.
 		return err
@@ -365,7 +365,7 @@ func (n *node) start(ctx context.Context) error {
 	return nil
 }
 
-// stop interrupts the running dcrd process, and waits until it exits
+// stop interrupts the running mond process, and waits until it exits
 // properly. On windows, interrupt is not supported, so a kill signal is used
 // instead
 func (n *node) stop() error {
@@ -386,7 +386,7 @@ func (n *node) stop() error {
 	default:
 	}
 
-	// Attempt a graceful dcrd shutdown by closing the pipeRX files.
+	// Attempt a graceful mond shutdown by closing the pipeRX files.
 	err := n.config.pipeRX.close()
 	if err != nil {
 		n.logf("Unable to close piperx ends: %v", err)
@@ -442,7 +442,7 @@ func (n *node) cleanup() error {
 	return nil
 }
 
-// shutdown terminates the running dcrd process, and cleans up all
+// shutdown terminates the running mond process, and cleans up all
 // file/directories created by node.
 func (n *node) shutdown() error {
 	log.Tracef("shutdown")
@@ -456,7 +456,7 @@ func (n *node) shutdown() error {
 }
 
 // rpcConnConfig returns the rpc connection config that can be used to connect
-// to the dcrd process that is launched via Start().
+// to the mond process that is launched via Start().
 func (n *node) rpcConnConfig() rpc.ConnConfig {
 	return rpc.ConnConfig{
 		Host:         n.rpcAddr,
@@ -469,7 +469,7 @@ func (n *node) rpcConnConfig() rpc.ConnConfig {
 
 // genCertPair generates a key/cert pair to the paths provided.
 func genCertPair(certFile, keyFile string) error {
-	org := "dcrdtest autogenerated cert"
+	org := "mondtest autogenerated cert"
 	validUntil := time.Now().Add(10 * 365 * 24 * time.Hour)
 	cert, key, err := certgen.NewTLSCertPair(elliptic.P521(), org,
 		validUntil, nil)

@@ -3,14 +3,14 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"context"
 	"reflect"
 	"time"
 
-	dcrdtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
+	mondtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
 	"github.com/monetarium/monetarium-node/rpcclient"
 )
 
@@ -51,7 +51,7 @@ func syncMempools(ctx context.Context, nodes []*Harness) error {
 
 	for !poolsMatch {
 	retry:
-		firstPool, err := nodes[0].Node.GetRawMempool(ctx, dcrdtypes.GRMAll)
+		firstPool, err := nodes[0].Node.GetRawMempool(ctx, mondtypes.GRMAll)
 		if err != nil {
 			return err
 		}
@@ -60,7 +60,7 @@ func syncMempools(ctx context.Context, nodes []*Harness) error {
 		// first node, then we're done. Otherwise, drop back to the top
 		// of the loop and retry after a short wait period.
 		for _, node := range nodes[1:] {
-			nodePool, err := node.Node.GetRawMempool(ctx, dcrdtypes.GRMAll)
+			nodePool, err := node.Node.GetRawMempool(ctx, mondtypes.GRMAll)
 			if err != nil {
 				return err
 			}

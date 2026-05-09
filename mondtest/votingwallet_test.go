@@ -2,7 +2,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"context"
@@ -55,7 +55,7 @@ func TestMinimalVotingWallet(t *testing.T) {
 	var handlers *rpcclient.NotificationHandlers
 	net := chaincfg.SimNetParams()
 
-	logDir := "./dcrdlogs"
+	logDir := "./mondlogs"
 	extraArgs := []string{
 		"--debuglevel=debug",
 		"--logdir=" + logDir,

@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"context"
@@ -28,19 +28,19 @@ var (
 	// current number of active test nodes.
 	numTestInstances atomic.Uint32
 
-	// pathToDCRD points to the test node. It is supplied through
-	// NewWithDCRD or created on the first call to newNode and used
+	// pathToMOND points to the test node. It is supplied through
+	// NewWithMOND or created on the first call to newNode and used
 	// throughout the life of this package.
-	pathToDCRD    string
-	pathToDCRDMtx sync.RWMutex
+	pathToMOND    string
+	pathToMONDMtx sync.RWMutex
 
 	errNilCoinbaseAddr = errors.New("memWallet coinbase addr is nil")
 )
 
-// Harness fully encapsulates an active dcrd process to provide a unified
-// platform for creating rpc driven integration tests involving dcrd. The
-// active dcrd node will typically be run in simnet mode in order to allow for
-// easy generation of test blockchains.  The active dcrd process is fully
+// Harness fully encapsulates an active mond process to provide a unified
+// platform for creating rpc driven integration tests involving mond. The
+// active mond node will typically be run in simnet mode in order to allow for
+// easy generation of test blockchains.  The active mond process is fully
 // managed by Harness, which handles the necessary initialization, and teardown
 // of the process along with any temporary directories created as a result.
 // Multiple Harness instances may be run concurrently, in order to allow for
@@ -65,18 +65,18 @@ type Harness struct {
 	sync.Mutex
 }
 
-// SetPathToDCRD sets the package level dcrd executable. All calls to New will
-// use the dcrd located there throughout their life. If not set upon the first
-// call to New, a dcrd will be created in a temporary directory and pathToDCRD
+// SetPathToMOND sets the package level mond executable. All calls to New will
+// use the mond located there throughout their life. If not set upon the first
+// call to New, a mond will be created in a temporary directory and pathToMOND
 // set automatically.
 //
 // NOTE: This function is safe for concurrent access, but care must be taken
-// when setting different paths and using New, as whatever is at pathToDCRD at
+// when setting different paths and using New, as whatever is at pathToMOND at
 // the time will be identified with that node.
-func SetPathToDCRD(fnScopePathToDCRD string) {
-	pathToDCRDMtx.Lock()
-	pathToDCRD = fnScopePathToDCRD
-	pathToDCRDMtx.Unlock()
+func SetPathToMOND(fnScopePathToMOND string) {
+	pathToMONDMtx.Lock()
+	pathToMOND = fnScopePathToMOND
+	pathToMONDMtx.Unlock()
 }
 
 // New creates and initializes new instance of the rpc test harness.
@@ -84,16 +84,16 @@ func SetPathToDCRD(fnScopePathToDCRD string) {
 // In the case that a nil config is passed, a default configuration will be
 // used.
 //
-// If pathToDCRD has been set to a non-empty value, the dcrd executable at that
-// location will be used. Otherwise, a dcrd binary will be built in
+// If pathToMOND has been set to a non-empty value, the mond executable at that
+// location will be used. Otherwise, a mond binary will be built in
 // a temporary dir and that binary will be used for this and any subsequent
 // calls to New(). This requires having the Go toolchain installed and
-// available. The version of the dcrd binary that will be built depends on the
+// available. The version of the mond binary that will be built depends on the
 // one required by the executing code.
 //
 // NOTE: This function is safe for concurrent access, but care must be taken
-// when calling New with different dcrd executables, as whatever is at
-// pathToDCRD at the time will be used to launch that node.
+// when calling New with different mond executables, as whatever is at
+// pathToMOND at the time will be used to launch that node.
 //
 // NOTE: passing a *testing.T object is deprecated and will be removed in a
 // future major version of this package. Use the global UseLogger function with
@@ -111,12 +111,12 @@ func New(t *testing.T, activeNet *chaincfg.Params, handlers *rpcclient.Notificat
 	case wire.RegNet:
 		extraArgs = append(extraArgs, "--regnet")
 	default:
-		return nil, fmt.Errorf("dcrdtest.New must be called with one " +
+		return nil, fmt.Errorf("mondtest.New must be called with one " +
 			"of the supported chain networks")
 	}
 
 	nodeNum := numTestInstances.Add(1)
-	nodeTestData, err := os.MkdirTemp("", fmt.Sprintf("dcrdtest-%03d-*", nodeNum))
+	nodeTestData, err := os.MkdirTemp("", fmt.Sprintf("mondtest-%03d-*", nodeNum))
 	if err != nil {
 		return nil, err
 	}
@@ -141,20 +141,20 @@ func New(t *testing.T, activeNet *chaincfg.Params, handlers *rpcclient.Notificat
 		return nil, err
 	}
 
-	// Create the dcrd node used for tests if not created yet.
-	pathToDCRDMtx.Lock()
-	if pathToDCRD == "" {
-		newPath, err := buildDcrd()
+	// Create the mond node used for tests if not created yet.
+	pathToMONDMtx.Lock()
+	if pathToMOND == "" {
+		newPath, err := buildMond()
 		if err != nil {
-			pathToDCRDMtx.Unlock()
+			pathToMONDMtx.Unlock()
 			return nil, err
 		}
-		pathToDCRD = newPath
+		pathToMOND = newPath
 	}
-	config.pathToDCRD = pathToDCRD
-	pathToDCRDMtx.Unlock()
+	config.pathToMOND = pathToMOND
+	pathToMONDMtx.Unlock()
 
-	// Uncomment and change to enable additional dcrd debug/trace output.
+	// Uncomment and change to enable additional mond debug/trace output.
 	// config.debugLevel = "TXMP=trace,TRSY=trace,RPCS=trace,PEER=trace"
 
 	// Create the testing node bounded to the simnet.
@@ -227,7 +227,7 @@ func (h *Harness) SetUp(ctx context.Context, createTestChain bool, numMatureOutp
 		}
 	}()
 
-	// Start the dcrd node itself. This spawns a new process which will be
+	// Start the mond node itself. This spawns a new process which will be
 	// managed
 	if err := h.node.start(ctx); err != nil {
 		return err
@@ -247,7 +247,7 @@ func (h *Harness) SetUp(ctx context.Context, createTestChain bool, numMatureOutp
 		return err
 	}
 
-	// Ensure dcrd properly dispatches our registered call-back for each new
+	// Ensure mond properly dispatches our registered call-back for each new
 	// block. Otherwise, the memWallet won't function properly.
 	if err := h.Node.NotifyBlocks(ctx); err != nil {
 		return err
@@ -341,7 +341,7 @@ func (h *Harness) TearDownInTest(t testing.TB) {
 
 	err := h.TearDown()
 	if err != nil {
-		errMsg := fmt.Sprintf("Unable to teardown dcrdtest harness: %v", err)
+		errMsg := fmt.Sprintf("Unable to teardown mondtest harness: %v", err)
 		if !t.Failed() {
 			t.Fatal(errMsg)
 		} else {
@@ -350,7 +350,7 @@ func (h *Harness) TearDownInTest(t testing.TB) {
 	}
 }
 
-// connectRPCClient attempts to establish an RPC connection to the created dcrd
+// connectRPCClient attempts to establish an RPC connection to the created mond
 // process belonging to this Harness instance. If the initial connection
 // attempt fails, this function will retry h.maxConnRetries times, backing off
 // the time between subsequent attempts. If after h.maxConnRetries attempts,

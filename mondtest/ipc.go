@@ -1,4 +1,4 @@
-package dcrdtest
+package mondtest
 
 import (
 	"bufio"
@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-// ipcPipePair holds both ends of an IPC pipe used to communicate with dcrd.
+// ipcPipePair holds both ends of an IPC pipe used to communicate with mond.
 type ipcPipePair struct {
 	r *os.File
 	w *os.File
@@ -41,18 +41,18 @@ func newIPCPipePair(closeR, closeW bool) (ipcPipePair, error) {
 	return ipcPipePair{r: r, w: w, closeR: closeR, closeW: closeW}, nil
 }
 
-// pipeMessage is a generic interface for dcrd pipe messages.
+// pipeMessage is a generic interface for mond pipe messages.
 type pipeMessage interface{}
 
 // boundP2PListenAddrEvent is a pipeMessage that tracks the P2P address of the
-// underlying dcrd node.
+// underlying mond node.
 type boundP2PListenAddrEvent string
 
 // boundRPCListenAddrEvent is a pipeMessage that tracks the RPC address of the
-// underlying dcrd node.
+// underlying mond node.
 type boundRPCListenAddrEvent string
 
-// nextIPCMessage returns the next dcrd IPC message read from the passed
+// nextIPCMessage returns the next mond IPC message read from the passed
 // reading-end pipe.
 //
 // For unknown messages, this returns an empty pipeMessage instead of an error.

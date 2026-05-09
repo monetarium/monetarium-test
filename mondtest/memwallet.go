@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"bytes"
@@ -198,7 +198,7 @@ func (m *memWallet) SyncedHeight() int64 {
 	return m.currentHeight
 }
 
-// SetRPCClient saves the passed rpc connection to dcrd as the wallet's
+// SetRPCClient saves the passed rpc connection to mond as the wallet's
 // personal rpc connection.
 func (m *memWallet) SetRPCClient(rpcClient *rpcclient.Client) {
 	m.rpc = rpcClient

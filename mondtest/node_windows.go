@@ -1,6 +1,6 @@
 //go:build windows
 
-package dcrdtest
+package mondtest
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-// setOSNodeCmdOptions sets platform-specific options needed to run dcrd.
+// setOSNodeCmdOptions sets platform-specific options needed to run mond.
 func setOSNodeCmdOptions(n *nodeConfig, cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		AdditionalInheritedHandles: []syscall.Handle{
@@ -18,7 +18,7 @@ func setOSNodeCmdOptions(n *nodeConfig, cmd *exec.Cmd) {
 	}
 }
 
-// appendOSNodeArgs appends platform-specific arguments needed to run dcrd.
+// appendOSNodeArgs appends platform-specific arguments needed to run mond.
 func appendOSNodeArgs(n *nodeConfig, args []string) []string {
 	args = append(args, fmt.Sprintf("--pipetx=%d", n.pipeTX.w.Fd()))
 	args = append(args, fmt.Sprintf("--piperx=%d", n.pipeRX.r.Fd()))

@@ -2,7 +2,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package dcrdtest
+package mondtest
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 	"github.com/monetarium/monetarium-node/dcrec"
 	"github.com/monetarium/monetarium-node/dcrec/secp256k1"
 	"github.com/monetarium/monetarium-node/dcrutil"
-	dcrdtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
+	mondtypes "github.com/monetarium/monetarium-node/rpc/jsonrpc/types"
 	"github.com/monetarium/monetarium-node/rpcclient"
 	"github.com/monetarium/monetarium-node/txscript"
 	"github.com/monetarium/monetarium-node/txscript/sign"
@@ -353,8 +353,8 @@ func (w *VotingWallet) GenerateBlocks(ctx context.Context, nb uint32) ([]*chainh
 		for !gotAllReqs {
 			select {
 			case <-timeout:
-				mempoolTickets, _ := w.c.GetRawMempool(ctx, dcrdtypes.GRMTickets)
-				mempoolVotes, _ := w.c.GetRawMempool(ctx, dcrdtypes.GRMVotes)
+				mempoolTickets, _ := w.c.GetRawMempool(ctx, mondtypes.GRMTickets)
+				mempoolVotes, _ := w.c.GetRawMempool(ctx, mondtypes.GRMVotes)
 				var notGot []string
 				if len(mempoolVotes) != nbVotes {
 					notGot = append(notGot, "votes")
@@ -368,8 +368,8 @@ func (w *VotingWallet) GenerateBlocks(ctx context.Context, nb uint32) ([]*chainh
 			case <-ctx.Done():
 				return nil, fmt.Errorf("wallet is stopping")
 			case <-testTimeout:
-				mempoolTickets, _ := w.c.GetRawMempool(ctx, dcrdtypes.GRMTickets)
-				mempoolVotes, _ := w.c.GetRawMempool(ctx, dcrdtypes.GRMVotes)
+				mempoolTickets, _ := w.c.GetRawMempool(ctx, mondtypes.GRMTickets)
+				mempoolVotes, _ := w.c.GetRawMempool(ctx, mondtypes.GRMVotes)
 
 				gotAllReqs = (!needsTickets || (len(mempoolTickets) >= nbVotes)) &&
 					(!needsVotes || (len(mempoolVotes) >= nbVotes))
